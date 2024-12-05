@@ -5,6 +5,7 @@ My implementation of Andrej Karpathy's NanoGPT.
 ## Useful links
 * Andrej Karpathy's original [NanoGPT repo](https://github.com/karpathy/nanoGPT)
 * The [YouTube video](https://www.youtube.com/watch?v=kCc8FmEb1nY) by Karpathy
+* The [Attention Is All You Need](https://arxiv.org/abs/1706.03762) paper on arXiv
 
 ## Data
 The `__resources__` folder contains 3 datasets:
