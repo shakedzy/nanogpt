@@ -1,6 +1,10 @@
 # NanoGPT
 
-My implementation of Andrej Karpathy's [NanoGPT](https://github.com/karpathy/nanoGPT).
+My implementation of Andrej Karpathy's NanoGPT.
+
+## Useful links
+* Andrej Karpathy's original [NanoGPT repo](https://github.com/karpathy/nanoGPT)
+* The [YouTube video](https://www.youtube.com/watch?v=kCc8FmEb1nY) by Karpathy
 
 ## Data
 The `__resources__` folder contains 3 datasets:
@@ -9,7 +13,7 @@ The `__resources__` folder contains 3 datasets:
 * `gutenberg_shakespeare_st.txt`: same as above, but with a special character (§) added at the beginning of each play
 
 ## Experiments
-The notebook file contains several experiments:
+The notebook file (`notebook.ipynb`) contains several experiments:
 * Training a simple Bigram Language Model (as seen on the beginning of Andrej's video)
 * Training NanoGPT using a simple character-level encoder
 * Training NanoGPT using OpenAI's GPT-4o encoder
