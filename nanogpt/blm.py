@@ -1,6 +1,7 @@
 import torch
 from torch import nn
 from torch.nn import functional as F
+from typing import Generator, Any
 
 
 class BigramLanguageModel(nn.Module):
@@ -25,11 +26,11 @@ class BigramLanguageModel(nn.Module):
     def generate(self, 
                  indices: torch.Tensor,     # (B,T) tensor
                  max_new_tokens: int
-                 ) -> torch.Tensor:
+                 ) -> Generator[torch.Tensor, Any, Any]:
         for _ in range(max_new_tokens):
             logits, __ = self(indices)                             # (B,T,C)
             logits = logits[:, -1, :]                              # Focus only on the last (T)ime step, becomes (B,C)
             probs = F.softmax(logits, dim=-1)                      # (B,C)
             next_index = torch.multinomial(probs, num_samples=1)   # Random sampling, (B,1)
             indices = torch.cat((indices, next_index), dim=1)      # (B,T+1)
-        return indices
+            yield next_index
