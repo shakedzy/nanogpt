@@ -8,7 +8,7 @@ AUTHOR = "Shaked Zychlinski"
 AUTHOR_EMAIL = "shakedzy@gmail.com"
 
 LICENSE = "MIT"
-VERSION = '0.0.1'
+VERSION = '0.1.0'
 DESCRIPTION = 'NanoGPT'
 LONG_DESCRIPTION = (HERE / "README.md").read_text(encoding="utf8")
 LONG_DESC_TYPE = "text/markdown"

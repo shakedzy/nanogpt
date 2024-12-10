@@ -1,3 +1,4 @@
+mlx
 numpy
 setuptools
 tiktoken
