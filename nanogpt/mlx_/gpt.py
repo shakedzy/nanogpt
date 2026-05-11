@@ -119,7 +119,7 @@ class NanoGPT(nn.Module):
         super().__init__()
         self.context_length = context_length
         self.token_embeddings = nn.Embedding(vocab_size, embedding_size)
-        self.positional_embeddings = nn.Embedding(vocab_size, embedding_size)
+        self.positional_embeddings = nn.Embedding(context_length, embedding_size)
         self.blocks = nn.Sequential(*[TransformerBlock(io_size=embedding_size, 
                                                        context_length=context_length, 
                                                        num_heads=num_heads,   
@@ -132,19 +132,20 @@ class NanoGPT(nn.Module):
                 indices: mx.array, 
                 targets: mx.array | None = None
                 ) -> tuple[mx.array, mx.array | None]:  
+        B, T = indices.shape
         token_emb = self.token_embeddings(indices)
-        pos_emb = self.positional_embeddings(indices)
+        pos_emb = self.positional_embeddings(mx.arange(T))
         x = token_emb + pos_emb
         x = self.blocks(x)
         x = self.lnorm(x)
         logits: mx.array  = self.final_layer(x)
-        
+
         loss = None
         if targets is not None:
             loss = losses.cross_entropy(logits, targets, axis=-1, reduction='mean')
         return logits, loss
-    
-    def generate(self, 
+
+    def generate(self,
                  indices: mx.array,     # (B,T) tensor
                  max_new_tokens: int
                  ) -> Generator[mx.array, Any, Any]:

@@ -128,7 +128,7 @@ class StreamNanoGPT(nn.Module):
         super().__init__()
         self.context_length = context_length
         self.token_embeddings = nn.Embedding(vocab_size, embedding_size)
-        self.positional_embeddings = nn.Embedding(vocab_size, embedding_size)
+        self.positional_embeddings = nn.Embedding(context_length, embedding_size)
         self.blocks = nn.Sequential(*[TransformerBlock(io_size=embedding_size, 
                                                        context_length=context_length, 
                                                        num_heads=num_heads,
@@ -142,8 +142,9 @@ class StreamNanoGPT(nn.Module):
                 indices: mx.array, 
                 targets: mx.array | None = None
                 ) -> tuple[mx.array, mx.array | None]:  
+        B, T = indices.shape
         token_emb = self.token_embeddings(indices)
-        pos_emb = self.positional_embeddings(indices)
+        pos_emb = self.positional_embeddings(mx.arange(T))
         x = token_emb + pos_emb
         x = self.blocks(x)
         x = self.lnorm(x)
