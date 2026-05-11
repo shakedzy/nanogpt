@@ -96,10 +96,17 @@ class TransformerBlock(nn.Module):
         self.ln2 = nn.LayerNorm(io_size)
 
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:  
-        # Layer normalization and skip-connections (residuals)
-        x = self.ln1(x + self.mh(x))
-        x = self.ln2(x + self.ff(x))
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        # Pre-LN: LayerNorm goes INSIDE the residual branch, so the residual
+        # stream itself is never normalized on the bypass path. "Attention is
+        # All You Need" originally used post-LN — LN(x + sublayer(x)) — but
+        # later work (and practice from GPT-2 onwards) showed post-LN
+        # destabilizes training for deep/small transformers and needs careful
+        # LR warmup. Pre-LN keeps gradients flowing back unchanged across the
+        # skip connection, trains more stably, and is also what makes the
+        # "residual stream as a shared workspace" interpretation valid.
+        x = x + self.mh(self.ln1(x))
+        x = x + self.ff(self.ln2(x))
         return x
     
 
