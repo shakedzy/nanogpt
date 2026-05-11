@@ -26,18 +26,19 @@ class Head(nn.Module):
         infs = mx.array([[-1e9] * context_length] * context_length)
         self._inf_triu = mx.triu(infs, k=1, stream=stream)
 
-    def __call__(self, x: mx.array) -> mx.array:  
+    def __call__(self, x: mx.array) -> mx.array:
         B, T, C = x.shape  # (T = context_length, C = input_size)
-        k: mx.array = self.key(x)    # (B, T, T'), T' = head_size
-        q: mx.array = self.query(x)  # (B, T, T')
-        v: mx.array = self.value(x)  # (B, T, T')
+        k: mx.array = self.key(x)    # (B, T, H), H = head_size
+        q: mx.array = self.query(x)  # (B, T, H)
+        v: mx.array = self.value(x)  # (B, T, H)
         kT = k.transpose(0, 2, 1, stream=self._stream)
-        attention = mx.matmul(q, kT, stream=self._stream) / mx.sqrt(mx.array(C), stream=self._stream)    # (B, T, T)
+        h = k.shape[-1]
+        attention = mx.matmul(q, kT, stream=self._stream) / mx.sqrt(mx.array(h), stream=self._stream)    # (B, T, T)
         attention = mx.tril(attention, k=0, stream=self._stream)
         attention = mx.add(attention, self._inf_triu[:T, :T], stream=self._stream)
         attention = mx.softmax(attention, axis=-1, stream=self._stream)
         attention = self.dropout(attention)  # regularization
-        return mx.matmul(attention, v, stream=self._stream)   # (B, T, C)
+        return mx.matmul(attention, v, stream=self._stream)   # (B, T, H)
 
 
 class MultiHeadAttention(nn.Module):

@@ -24,17 +24,18 @@ class Head(nn.Module):
         infs = mx.array([[-1e9] * context_length] * context_length)
         self._inf_triu = mx.triu(infs, k=1)
 
-    def __call__(self, x: mx.array) -> mx.array:  
+    def __call__(self, x: mx.array) -> mx.array:
         B, T, C = x.shape  # (T = context_length, C = input_size)
-        k: mx.array = self.key(x)    # (B, T, T'), T' = head_size
-        q: mx.array = self.query(x)  # (B, T, T')
-        v: mx.array = self.value(x)  # (B, T, T')
-        attention = q @ k.transpose(0, 2, 1) / mx.sqrt(mx.array(C))    # (B, T, T)
+        k: mx.array = self.key(x)    # (B, T, H), H = head_size
+        q: mx.array = self.query(x)  # (B, T, H)
+        v: mx.array = self.value(x)  # (B, T, H)
+        h = k.shape[-1]
+        attention = q @ k.transpose(0, 2, 1) / mx.sqrt(mx.array(h))    # (B, T, T)
         attention = mx.tril(attention, k=0)
         attention += self._inf_triu[:T, :T]
         attention = mx.softmax(attention, axis=-1)
         attention = self.dropout(attention)  # regularization
-        return attention @ v   # (B, T, C)
+        return attention @ v   # (B, T, H)
 
 
 class MultiHeadAttention(nn.Module):

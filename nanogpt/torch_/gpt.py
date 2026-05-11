@@ -19,17 +19,18 @@ class Head(nn.Module):
         self.dropout = nn.Dropout(dropout)
         self.register_buffer('tril', torch.tril(torch.ones(context_length, context_length)))
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:  
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         B, T, C = x.shape  # (T = context_length, C = input_size)
-        k: torch.Tensor = self.key(x)    # (B, T, T'), T' = head_size
-        q: torch.Tensor = self.query(x)  # (B, T, T')
-        v: torch.Tensor = self.value(x)  # (B, T, T')
+        k: torch.Tensor = self.key(x)    # (B, T, H), H = head_size
+        q: torch.Tensor = self.query(x)  # (B, T, H)
+        v: torch.Tensor = self.value(x)  # (B, T, H)
         # The lines below are the famous attention equation, along with masking and regularization.
-        attention = q @ k.transpose(-2, -1) / torch.sqrt(torch.tensor(C))    # (B, T, T)
+        h = k.size(-1)
+        attention = q @ k.transpose(-2, -1) / torch.sqrt(torch.tensor(h, dtype=q.dtype, device=q.device))    # (B, T, T)
         attention = attention.masked_fill(self.tril[:T,:T] == 0, -float('inf'))  # not allowing future information to flow backwards
-        attention = F.softmax(attention, dim=-1)   
+        attention = F.softmax(attention, dim=-1)
         attention = self.dropout(attention)  # regularization
-        return attention @ v   # (B, T, C)
+        return attention @ v   # (B, T, H)
 
 
 class MultiHeadAttention(nn.Module):
