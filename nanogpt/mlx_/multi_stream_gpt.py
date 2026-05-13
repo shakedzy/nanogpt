@@ -76,13 +76,18 @@ class FeedForward(nn.Module):
         assert dropout >= 0 and dropout < 1
         super().__init__()
         self.ffn = nn.Sequential(
-            # The three lines below are exactly Equation (2) of "Attention is All You Need" 
+            # The three lines below are exactly Equation (2) of "Attention is All You Need"
             # The 4 scale-factor comes from the remarks under that equation
-            nn.Linear(io_size, 4 * io_size), 
-            nn.ReLU(),  
+            nn.Linear(io_size, 4 * io_size),
+            # GELU instead of the paper's ReLU. GELU is smooth everywhere
+            # (so no "dead neurons" with permanently-zero gradient) and can
+            # output slightly negative values for slightly-negative inputs,
+            # giving each neuron one extra mode of expression. Used in
+            # GPT-2 onwards; small but reliable improvement over ReLU.
+            nn.GELU(),
             nn.Linear(4 * io_size, io_size),
             # The dropout is not mentioned in the original paper
-            nn.Dropout(dropout)  
+            nn.Dropout(dropout)
         )
 
     def __call__(self, x: mx.array):  
@@ -144,6 +149,16 @@ class StreamNanoGPT(nn.Module):
                                         for _ in range(num_blocks)])
         self.lnorm = nn.LayerNorm(embedding_size)
         self.final_layer = nn.Linear(embedding_size, vocab_size)
+        # Weight tying: share the (vocab_size, embedding_size) matrix between
+        # the input embedding lookup and the output LM head. Row i of that
+        # matrix describes "token i as a residual-stream vector" — used for
+        # encoding on the input side and for scoring on the output side.
+        # Both jobs are dual aspects of the same question, so reusing one
+        # matrix (a) saves vocab_size * embedding_size parameters, (b) gives
+        # each row twice the gradient signal (from both input and output
+        # contexts), and (c) biases the model toward genuinely meaningful
+        # token representations. Standard since GPT-2; see Press & Wolf 2016.
+        self.final_layer.weight = self.token_embeddings.weight
 
     def __call__(self, 
                 indices: mx.array, 

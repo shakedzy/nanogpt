@@ -1,6 +1,0 @@
-mlx
-numpy
-setuptools
-tiktoken
-torch
-tqdm

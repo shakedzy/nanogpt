@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nanogpt-interp"
+version = "0.1.0"
+description = "Mechanistic interpretability dashboard for a NanoGPT-style transformer."
+requires-python = ">=3.11"
+dependencies = [
+    "torch>=2.5",
+    "numpy",
+    "tqdm",
+    "tiktoken",
+    "tokenizers>=0.20",
+    "datasets>=3.0",
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "pydantic>=2.7",
+]
+
+[project.optional-dependencies]
+mlx = ["mlx"]
+
+[tool.setuptools.packages.find]
+include = ["nanogpt*", "server*"]
+
+[tool.setuptools.package-data]
+nanogpt = ["__resources__/*"]

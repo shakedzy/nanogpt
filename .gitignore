@@ -1,5 +1,11 @@
 .vscode*
 .venv*
+.claude*
 *__pycache__*
 *egg-info*
+.playwright-mcp*
 .DS_Store
+node_modules/
+dist/
+data/tokens_*.bin
+uv.lock
